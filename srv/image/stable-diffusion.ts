@@ -189,13 +189,26 @@ function getPayload(
       Math.trunc(Math.random() * (Number.MAX_SAFE_INTEGER - 1)),
     steps: opts.params?.steps ?? opts.settings?.steps ?? model?.init.steps ?? 28,
     restore_faces: false,
-    save_images: false,
+    save_images: true,
     send_images: true,
     model_override: temp ? temp.override : model?.override,
     denoise: temp ? temp.init.denoise : model?.init.denoise,
     draft_mode: opts.settings?.agnai?.draftMode,
     loras,
     lora_strengths,
+    alwayson_scripts: {
+    ADetailer: {
+      args: [
+        true,  // Enable ADetailer
+        false, // Skip img2img (for txt2img)
+        {
+          ad_model: "face_yolov8n.pt", // Use face detection model
+          ad_confidence: 0.3,          // Confidence threshold
+          ad_denoising_strength: 0.4   // Inpainting strength
+        }
+      ]
+    },
+  }
   }
 
   if (model) {
