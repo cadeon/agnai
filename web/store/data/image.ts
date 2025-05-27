@@ -62,10 +62,23 @@ export async function generateImage(
   const prompt = summary.result.response
   onSummary?.(prompt)
 
+  let promptToProcess = prompt;
+
+  // Check if opts.prompt was originally provided (meaning it's a direct prompt)
+  // and if the preset has a maxContextLength.
+  if (opts.prompt && entities.preset?.maxContextLength && entities.preset.maxContextLength > 0) {
+    const presetMaxContext = entities.preset.maxContextLength;
+    const currentTokens = await encode(promptToProcess);
+    if (currentTokens.length > presetMaxContext) {
+      promptToProcess = await decode(currentTokens.slice(0, presetMaxContext));
+    }
+  }
+
   const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
 
+  // Now, use promptToProcess for the getMaxImageContext trimming
   const max = getMaxImageContext(entities.user)
-  const trimmed = await encode(prompt)
+  const trimmed = await encode(promptToProcess)
     .then((tokens) => tokens.slice(0, max))
     .then(decode)
 
@@ -271,8 +284,9 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
 
 async function getChatSummary(settings: Partial<AppSchema.GenSettings>, summaryPrompt?: string) {
   const opts = await msgsApi.getActiveTemplateParts()
+  const contextLength = settings.maxContextLength && settings.maxContextLength > 0 ? settings.maxContextLength : 4096;
   opts.limit = {
-    context: 8192,
+    context: contextLength,
     encoder: await getEncoder(),
   }
   opts.lines = (opts.lines || []).reverse()
