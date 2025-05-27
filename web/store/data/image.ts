@@ -62,23 +62,10 @@ export async function generateImage(
   const prompt = summary.result.response
   onSummary?.(prompt)
 
-  let promptToProcess = prompt;
-
-  // Check if opts.prompt was originally provided (meaning it's a direct prompt)
-  // and if the preset has a maxContextLength.
-  if (opts.prompt && entities.preset?.maxContextLength && entities.preset.maxContextLength > 0) {
-    const presetMaxContext = entities.preset.maxContextLength;
-    const currentTokens = await encode(promptToProcess);
-    if (currentTokens.length > presetMaxContext) {
-      promptToProcess = await decode(currentTokens.slice(0, presetMaxContext));
-    }
-  }
-
   const characterId = entities.messages.reduceRight((id, msg) => id || msg.characterId)
 
-  // Now, use promptToProcess for the getMaxImageContext trimming
   const max = getMaxImageContext(entities.user)
-  const trimmed = await encode(promptToProcess)
+  const trimmed = await encode(prompt)
     .then((tokens) => tokens.slice(0, max))
     .then(decode)
 
