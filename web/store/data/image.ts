@@ -271,8 +271,9 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
 
 async function getChatSummary(settings: Partial<AppSchema.GenSettings>, summaryPrompt?: string) {
   const opts = await msgsApi.getActiveTemplateParts()
+  const contextLength = settings.maxContextLength && settings.maxContextLength > 0 ? settings.maxContextLength : 4096;
   opts.limit = {
-    context: 8192,
+    context: contextLength,
     encoder: await getEncoder(),
   }
   opts.lines = (opts.lines || []).reverse()
