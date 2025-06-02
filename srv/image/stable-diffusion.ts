@@ -197,7 +197,6 @@ function getPayload(
     loras,
     lora_strengths,
   }
-  }
 
   if (model) {
     payload.steps = Math.min(+model.limit.steps, payload.steps)
